@@ -3,7 +3,7 @@ import glfw
 import OpenGL.GL as gl
 from imgui.integrations.glfw import GlfwRenderer
 from pymeasure.instruments.keithley import Keithley2400
-
+import time
 
 def impl_glfw_init(window_name="minimal ImGui/GLFW3 example", width=1280, height=720):
     if not glfw.init():
@@ -42,6 +42,7 @@ class GUI(object):
         self.initKeithley()
         self.output = False
         self.current = 0.0
+        self.voltage=0.0
         self.loop()
 
     def initKeithley(self):
@@ -54,14 +55,16 @@ class GUI(object):
         self.keithley.source_current = 0
 
         # setting voltage read params
-        self.keithley.measure_voltage(5, 2, False)
+        self.keithley.measure_voltage(1, 2, False)
         #just for fun:
-        self.keithley.beep(400, 1)
+        self.keithley.beep(400, 0.5)
+        self.keithley.beep(600, 0.5)
         self.keithley.write(":SYST:BEEP:STAT OFF")
 
 
 
     def loop(self):
+        voltage_check_time = time.time()
         while not glfw.window_should_close(self.window):
             glfw.poll_events()
             self.impl.process_inputs()
@@ -82,6 +85,23 @@ class GUI(object):
                     self.keithley.enable_source()
                 else:
                     self.keithley.disable_source()
+
+
+            if (time.time() - voltage_check_time) > 0.3:
+                if self.output:
+                    self.voltage = self.keithley.voltage #in Volts
+                else:
+                    self.voltage = 0
+                voltage_check_time = time.time()
+
+
+
+
+            _,_ = imgui.input_double('Voltage [mv]', self.voltage*1000 ,imgui.INPUT_TEXT_READ_ONLY)
+            if self.current == 0:
+                _, _ = imgui.input_double('Resistance [Ohm]', 0.0, imgui.INPUT_TEXT_READ_ONLY)
+            else:
+                _, _ = imgui.input_double('Resistance [Ohm]', self.voltage / (self.current / 1000), imgui.INPUT_TEXT_READ_ONLY)
 
             imgui.end()
 
