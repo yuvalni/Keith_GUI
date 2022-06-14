@@ -39,29 +39,36 @@ class GUI(object):
         imgui.create_context()
         self.impl = GlfwRenderer(self.window)
         self.keithley = Keithley2400("GPIB::16")
-        self.initKeithley()
+
         self.output = False
         self.current = 0.0
         self.voltage=0.0
+        self.Vcomp = 2.0 #source compliance
+        self.VMlimit = 2.0 #measure limit!
+        self.initKeithley()
         self.loop()
 
     def initKeithley(self):
         self.keithley.reset()
         # setting current params
         self.keithley.use_front_terminals()
-        self.keithley.apply_current(0.01, 2.0)
+        self.keithley.apply_current(0.01, self.Vcomp)
         self.keithley.wires = 4  # set to 4 wires
         # self.keithley.compliance_voltage = V_comp
         self.keithley.source_current = 0
 
         # setting voltage read params
-        self.keithley.measure_voltage(1, 2, False)
+        self.keithley.measure_voltage(1, self.VMlimit, False)
         #just for fun:
         self.keithley.beep(400, 0.5)
         self.keithley.beep(600, 0.5)
         self.keithley.write(":SYST:BEEP:STAT OFF")
 
+    def setSourceVoltageCompliance(self):
+        self.keithley.apply_current(0.01, self.Vcomp)
 
+    def setMeasureVoltageLimit(self):
+        self.keithley.measure_voltage(1, self.VMlimit, False)
 
     def loop(self):
         voltage_check_time = time.time()
@@ -94,14 +101,27 @@ class GUI(object):
                     self.voltage = 0
                 voltage_check_time = time.time()
 
-
-
+            imgui.separator()
+            imgui.spacing()
+            imgui.spacing()
+            imgui.spacing()
+            imgui.begin_group()
 
             _,_ = imgui.input_double('Voltage [mv]', self.voltage*1000 ,imgui.INPUT_TEXT_READ_ONLY)
+
+
             if self.current == 0:
                 _, _ = imgui.input_double('Resistance [Ohm]', 0.0, imgui.INPUT_TEXT_READ_ONLY)
             else:
                 _, _ = imgui.input_double('Resistance [Ohm]', self.voltage / (self.current / 1000), imgui.INPUT_TEXT_READ_ONLY)
+            imgui.end_group()
+            imgui.separator()
+            imgui.spacing()
+            imgui.spacing()
+            imgui.spacing()
+            changed, self.Vcomp = imgui.input_double('source voltage compliance[V]', self.Vcomp)
+            if changed:
+                self.setSourceVoltageCompliance()
 
             imgui.end()
 
