@@ -38,7 +38,12 @@ class GUI(object):
         gl.glClearColor(*self.backgroundColor)
         imgui.create_context()
         self.impl = GlfwRenderer(self.window)
-        self.keithley = Keithley2400("GPIB::16")
+
+        try:
+            self.keithley = Keithley2400("GPIB::16")
+        except:
+            print("no keithley")
+            self.keithley = False
 
         self.output = False
         self.current = 0.0
@@ -49,20 +54,21 @@ class GUI(object):
         self.loop()
 
     def initKeithley(self):
-        self.keithley.reset()
-        # setting current params
-        self.keithley.use_front_terminals()
-        self.keithley.apply_current(0.01, self.Vcomp)
-        self.keithley.wires = 4  # set to 4 wires
-        # self.keithley.compliance_voltage = V_comp
-        self.keithley.source_current = 0
+        if self.keithley:
+            self.keithley.reset()
+            # setting current params
+            self.keithley.use_front_terminals()
+            self.keithley.apply_current(0.01, self.Vcomp)
+            self.keithley.wires = 4  # set to 4 wires
+            # self.keithley.compliance_voltage = V_comp
+            self.keithley.source_current = 0
 
-        # setting voltage read params
-        self.keithley.measure_voltage(1, self.VMlimit, False)
-        #just for fun:
-        self.keithley.beep(400, 0.5)
-        self.keithley.beep(600, 0.5)
-        self.keithley.write(":SYST:BEEP:STAT OFF")
+            # setting voltage read params
+            self.keithley.measure_voltage(1, self.VMlimit, False)
+            #just for fun:
+            self.keithley.beep(400, 0.5)
+            self.keithley.beep(600, 0.5)
+            self.keithley.write(":SYST:BEEP:STAT OFF")
 
     def setSourceVoltageCompliance(self):
         self.keithley.apply_current(0.01, self.Vcomp)
@@ -82,7 +88,7 @@ class GUI(object):
             imgui.text("Current control")
 
             changed, self.current = imgui.input_double('Applied current [mA]', self.current)
-            if changed:
+            if changed:                
                 self.keithley.source_current = self.current/1000
                 assert self.keithley.source_current < 0.01
                 # need to do something more gentle
