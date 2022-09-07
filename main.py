@@ -88,7 +88,7 @@ class GUI(object):
             imgui.text("Current control")
 
             changed, self.current = imgui.input_double('Applied current [mA]', self.current)
-            if changed:                
+            if changed:
                 self.keithley.source_current = self.current/1000
                 assert self.keithley.source_current < 0.01
                 # need to do something more gentle
@@ -144,4 +144,5 @@ class GUI(object):
 
 
 if __name__ == "__main__":
+    #here
     gui = GUI()
