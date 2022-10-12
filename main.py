@@ -3,6 +3,9 @@ import glfw
 import OpenGL.GL as gl
 from imgui.integrations.glfw import GlfwRenderer
 from pymeasure.instruments.keithley import Keithley2400
+
+from SES_Interface import SES_API
+import threading
 import time
 
 def impl_glfw_init(window_name="minimal ImGui/GLFW3 example", width=1280, height=720):
@@ -51,6 +54,9 @@ class GUI(object):
         self.Vcomp = 2.0 #source compliance
         self.VMlimit = 2.0 #measure limit!
         self.initKeithley()
+        self.SES_API = SES_API(self.setCurrent,self.getCurrent)
+        self.API_thread = threading.Thread(target=self.SES_API.handle_connection)
+        self.API_thread.start()
         self.loop()
 
     def initKeithley(self):
@@ -76,6 +82,15 @@ class GUI(object):
     def setMeasureVoltageLimit(self):
         self.keithley.measure_voltage(1, self.VMlimit, False)
 
+    def getCurrent(self):
+        #helper function for SES API
+        return self.current
+
+    def setCurrent(self,I):
+        # helper function for SES API
+        self.keithley.source_current = I/1000 #in mA
+        self.current = I
+
     def loop(self):
         voltage_check_time = time.time()
         while not glfw.window_should_close(self.window):
@@ -90,7 +105,7 @@ class GUI(object):
             changed, self.current = imgui.input_double('Applied current [mA]', self.current)
             if changed:
                 self.keithley.source_current = self.current/1000
-                assert self.keithley.source_current < 0.01
+                assert self.keithley.source_current < 0.09
                 # need to do something more gentle
             _, self.output = imgui.checkbox("Apply current", self.output)
             if _:

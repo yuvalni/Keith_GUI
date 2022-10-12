@@ -6,7 +6,7 @@ from time import sleep
 class SES_API:
     def __init__(self,setCurrent,getCurrent):
         self.HOST = "127.0.0.1"
-        self.PORT = 5011  # Port to listen on (non-privileged ports are > 1023)
+        self.PORT = 5012  # Port to listen on (non-privileged ports are > 1023)
         self.conn = None
         self.listening = False
         self.connected = False
@@ -14,11 +14,12 @@ class SES_API:
         self.getCurrent = getCurrent
 
 
-    def get_Curr():
-        self.conn.send("{}\n".format(self.get_Curr()).encode())
+    def get_Curr(self):
+        #Not to be confused with getCurrent (confusing? YES!)
+        self.conn.send("{}\n".format(self.getCurrent()).encode())
 
 
-    def set_Curr(data):
+    def set_Curr(self,data):
         self.setCurrent(float(data.replace("Curr","")))
 
     def stop():
@@ -36,7 +37,7 @@ class SES_API:
                 print("listening")
                 self.listening = True
                 #gui: listening ...yellow
-                eel.set_socket_value(1)
+                #eel.set_socket_value(1)
                 read,write,_ = select([s],[s],[],0.01)
                 while(not read):
                     #waiting for connection without blocking
@@ -69,7 +70,7 @@ class SES_API:
                         for data in data.decode("UTF-8").split('\n'):
                             if("?" in data):
                                 self.get_Curr() #Handle data request
-                            elif "CURR" in data: #MOVX5.0 for example
+                            elif "Curr" in data: #MOVX5.0 for example
                                 self.set_Curr(data) #handle move request
                             elif "STOP" in data:
                                 self.stop()
