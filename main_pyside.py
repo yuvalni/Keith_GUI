@@ -72,7 +72,7 @@ class KeithleyGUI(QtWidgets.QWidget,):
         self.PID_voltage_target = QtWidgets.QLineEdit()
         self.PID_voltage_target.setValidator(double_validator)
         self.PID_voltage_target.setText("")
-        self.PID_voltage_target.setEnabled(False)
+        self.PID_voltage_target.setEnabled(True)
         PID_voltage_Form.addRow("PID target", self.PID_voltage_target)
         vbox.addLayout(PID_voltage_Form)
 
@@ -315,7 +315,8 @@ class KeithleyGUI(QtWidgets.QWidget,):
         else:
             self.voltage = 0.05
 
-        self.pid.setpoint = self.voltage
+        #self.pid.setpoint = self.voltage
+        self.pid.setpoint = float(self.PID_voltage_target.text())
         self.PID_voltage_target.setText(str(self.pid.setpoint))
         self.setCurrentValue.setEnabled(False) # I controll the current now
         self.applyCurrentCB.setEnabled(False)
