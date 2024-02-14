@@ -6,7 +6,8 @@ from SES_Interface import SES_API
 import threading
 import time
 import sys
-
+from simple_pid import PID
+from random import random
 #:VOLTage:PROTection:TRIPped? (for source)
 
 
@@ -42,6 +43,14 @@ class KeithleyGUI(QtWidgets.QWidget,):
         #self.API_thread = threading.Thread(target=self.SES_API.handle_connection,daemon=True)
         #self.API_thread.start()
 
+        self.pid = PID(1.0, 0.0, 0.0, setpoint=0.0) # initial parameters
+        self.pid.sample_time = 0.01  # Update every 0.01 seconds
+        self.pid.output_limits = (0, 90) #in mA
+        self.PID_timer =QTimer()
+        self.PID_timer.timeout.connect(self.run_PID)
+        self.PID_timer.setInterval(10) #update every 10 millisec
+
+
     def initLayout(self):
         layout = QtWidgets.QVBoxLayout()
         Current_group = QtWidgets.QGroupBox("Set current")
@@ -68,6 +77,11 @@ class KeithleyGUI(QtWidgets.QWidget,):
         self.applyCurrentCB = QtWidgets.QCheckBox()
         self.applyCurrentCB.stateChanged.connect(lambda: self.toggleOutput(self.applyCurrentCB.checkState()))
         applyForm.addRow("Apply Current",self.applyCurrentCB)
+
+        self.runPIDCB = QtWidgets.QCheckBox()
+        self.runPIDCB.stateChanged.connect(lambda: self.handle_PID_CB_change(self.runPIDCB.checkState()))
+        applyForm.addRow("Start PID",self.runPIDCB)
+
         vbox.addLayout(applyForm)
 
 
@@ -249,6 +263,46 @@ class KeithleyGUI(QtWidgets.QWidget,):
         self.CurrentValue.setText(str(self.current))
         self.VoltageValue.setText(str(self.voltage))
         self.ResistanceValue.setText(str(self.resistance))
+
+
+    def handle_PID_CB_change(self,state):
+        if state != Qt.CheckState.Checked:
+            self.stop_PID()
+        if state == Qt.CheckState.Checked:
+            self.start_PID()
+
+    def start_PID(self):
+        self.toggleOutput(Qt.CheckState.Checked) #start current
+        if self.keithley:
+            self.voltage = self.keithley.voltage*1000 #keithley talks in Volts, we want mV
+        else:
+            self.voltage = 0.05
+
+        self.pid.setpoint = self.voltage
+        self.setCurrentValue.setEnabled(False) # I controll the current now
+        self.applyCurrentCB.setEnabled(False)
+        self.PID_timer.start()
+
+    def stop_PID(self):
+        self.toggleOutput(Qt.CheckState.Unchecked) #start current
+        self.PID_timer.stop()
+        self.setCurrentValue.setEnabled(True) # I controll the current now
+        self.applyCurrentCB.setEnabled(True)
+
+    def run_PID(self):
+        if self.keithley:
+            self.voltage = self.keithley.voltage*1000 #keithley talks in Volts, we want mV
+        else:
+            self.voltage = self.pid.setpoint*random()
+
+        output = self.pid(self.voltage)
+        assert output < 100.0 #don't put too much current!!
+        self.current = output
+        self.setCurrent(output*1000) #this function expects to get in milliamps
+        self.setCurrentValue.setText(str(self.current)) #show the current
+
+
+
 
 
 if __name__ == "__main__":
