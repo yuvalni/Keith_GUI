@@ -279,6 +279,7 @@ class KeithleyGUI(QtWidgets.QWidget,):
             self.voltage = 0.05
 
         self.pid.setpoint = self.voltage
+        print(self.pid.setpoint)
         self.setCurrentValue.setEnabled(False) # I controll the current now
         self.applyCurrentCB.setEnabled(False)
         self.PID_timer.start()
@@ -298,6 +299,7 @@ class KeithleyGUI(QtWidgets.QWidget,):
         output = self.pid(self.voltage)
         assert output < 100.0 #don't put too much current!!
         self.current = output
+        print(output)
         self.setCurrent(output) #this function expects to get in milliamps
         self.setCurrentValue.setText(str(self.current)) #show the current
 
