@@ -298,7 +298,7 @@ class KeithleyGUI(QtWidgets.QWidget,):
         output = self.pid(self.voltage)
         assert output < 100.0 #don't put too much current!!
         self.current = output
-        self.setCurrent(output*1000) #this function expects to get in milliamps
+        self.setCurrent(output) #this function expects to get in milliamps
         self.setCurrentValue.setText(str(self.current)) #show the current
 
 
