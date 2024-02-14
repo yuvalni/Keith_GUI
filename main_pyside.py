@@ -141,6 +141,30 @@ class KeithleyGUI(QtWidgets.QWidget,):
         settingsGroupVbox.addLayout(VrangeRow)
         ### voltage range setting end
 
+        ###PID settings
+        PIDRow = QtWidgets.QHBoxLayout()
+        PIDRow.addWidget(QtWidgets.QLabel("P"))
+        self.pid_P_value = QtWidgets.QLineEdit()
+        self.pid_P_value.setValidator(double_validator)
+        self.pid_P_value.setText("1.0")
+        PIDRow.addWidget(self.pid_P_value)
+
+        PIDRow.addWidget(QtWidgets.QLabel("I"))
+        self.pid_I_value = QtWidgets.QLineEdit()
+        self.pid_I_value.setValidator(double_validator)
+        self.pid_I_value.setText("0.0")
+        PIDRow.addWidget(self.pid_I_value)
+
+        PIDRow.addWidget(QtWidgets.QLabel("D"))
+        self.pid_D_value = QtWidgets.QLineEdit()
+        self.pid_D_value.setValidator(double_validator)
+        self.pid_D_value.setText("0.0")
+        PIDRow.addWidget(self.pid_D_value)
+
+        settingsGroupVbox.addLayout(PIDRow)
+        ###PID settings end
+
+
         measureGroup = QtWidgets.QGroupBox("Measured Values")
         measureGroup.setStyleSheet("QGroupBox{font: 12px;}")
         measureGroupVbox = QtWidgets.QVBoxLayout()
@@ -272,6 +296,11 @@ class KeithleyGUI(QtWidgets.QWidget,):
             self.start_PID()
 
     def start_PID(self):
+        P = float(self.pid_P_value.text())
+        I = float(self.pid_I_value.text())
+        D = float(self.pid_D_value.text())
+        print(P,I,D)
+        self.pid.tunings = (P, I, D)
         self.toggleOutput(Qt.CheckState.Checked) #start current
         if self.keithley:
             self.voltage = self.keithley.voltage*1000 #keithley talks in Volts, we want mV
