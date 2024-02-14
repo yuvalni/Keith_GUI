@@ -68,6 +68,14 @@ class KeithleyGUI(QtWidgets.QWidget,):
         Cuurent_form.addRow("Set Current", self.setCurrentValue)
         vbox.addLayout(Cuurent_form)
 
+        PID_voltage_Form = QtWidgets.QFormLayout()
+        self.PID_voltage_target = QtWidgets.QLineEdit()
+        self.PID_voltage_target.setValidator(double_validator)
+        self.PID_voltage_target.setText("")
+        self.PID_voltage_target.setEnabled(False)
+        PID_voltage_Form.addRow("PID target", self.PID_voltage_target)
+        vbox.addLayout(PID_voltage_Form)
+
         setCurrBtn = QtWidgets.QPushButton("Set current [mA]")
         setCurrBtn.clicked.connect(lambda: self.setCurrent(float(self.setCurrentValue.text())))
         vbox.addWidget(setCurrBtn)
@@ -308,7 +316,7 @@ class KeithleyGUI(QtWidgets.QWidget,):
             self.voltage = 0.05
 
         self.pid.setpoint = self.voltage
-        print(self.pid.setpoint)
+        self.PID_voltage_target.setText(str(self.pid.setpoint))
         self.setCurrentValue.setEnabled(False) # I controll the current now
         self.applyCurrentCB.setEnabled(False)
         self.PID_timer.start()
