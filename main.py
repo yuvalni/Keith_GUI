@@ -8,6 +8,9 @@ from SES_Interface import SES_API
 import threading
 import time
 
+
+#:VOLTage:PROTection:TRIPped? (for source)
+
 def impl_glfw_init(window_name="minimal ImGui/GLFW3 example", width=1280, height=720):
     if not glfw.init():
         print("Could not initialize OpenGL context")
@@ -52,10 +55,11 @@ class GUI(object):
         self.current = 0.0
         self.voltage=0.0
         self.Vcomp = 2.0 #source compliance
-        self.VMlimit = 2.0 #measure limit!
+        self.VMlimit = 4.0 #measure limit!
+        self.rear_terminals = True
         self.initKeithley()
         self.SES_API = SES_API(self.setCurrent,self.getCurrent)
-        self.API_thread = threading.Thread(target=self.SES_API.handle_connection)
+        self.API_thread = threading.Thread(target=self.SES_API.handle_connection,daemon=True)
         self.API_thread.start()
         self.loop()
 
@@ -63,24 +67,32 @@ class GUI(object):
         if self.keithley:
             self.keithley.reset()
             # setting current params
-            self.keithley.use_front_terminals()
-            self.keithley.apply_current(0.01, self.Vcomp)
+            #self.keithley.use_front_terminals()
+            self.keithley.use_rear_terminals()
+            self.keithley.apply_current(None, self.Vcomp)
             self.keithley.wires = 4  # set to 4 wires
             # self.keithley.compliance_voltage = V_comp
             self.keithley.source_current = 0
-
+            self.keithley.auto_zero = True
             # setting voltage read params
-            self.keithley.measure_voltage(1, self.VMlimit, False)
+            self.keithley.measure_voltage(1, self.VMlimit, True)
+
             #just for fun:
-            self.keithley.beep(400, 0.5)
-            self.keithley.beep(600, 0.5)
+            #self.keithley.beep(400, 0.5)
+            #self.keithley.beep(600, 0.5)
+            self.keithley.triad(400,0.3)
             self.keithley.write(":SYST:BEEP:STAT OFF")
 
     def setSourceVoltageCompliance(self):
-        self.keithley.apply_current(0.01, self.Vcomp)
+        self.keithley.apply_current(None, self.Vcomp)
+    def changeTerminals(self):
+        if self.rear_terminals:
+            self.keithley.use_rear_terminals()
+        else:
+            self.keithley.use_front_terminals()
 
     def setMeasureVoltageLimit(self):
-        self.keithley.measure_voltage(1, self.VMlimit, False)
+        self.keithley.measure_voltage(2, self.VMlimit, False)
 
     def getCurrent(self):
         #helper function for SES API
@@ -90,6 +102,7 @@ class GUI(object):
         # helper function for SES API
         self.keithley.source_current = I/1000 #in mA
         self.current = I
+
 
     def loop(self):
         voltage_check_time = time.time()
@@ -104,7 +117,9 @@ class GUI(object):
 
             changed, self.current = imgui.input_double('Applied current [mA]', self.current)
             if changed:
-                self.keithley.source_current = self.current/1000
+                print(self.current)
+                self.keithley.source_current = float(self.current)/1000
+                print(self.keithley.source_current)
                 assert self.keithley.source_current < 0.09
                 # need to do something more gentle
             _, self.output = imgui.checkbox("Apply current", self.output)
@@ -143,6 +158,15 @@ class GUI(object):
             changed, self.Vcomp = imgui.input_double('source voltage compliance[V]', self.Vcomp)
             if changed:
                 self.setSourceVoltageCompliance()
+
+            changed, self.VMlimit = imgui.input_double('measure voltage compliance[V]', self.VMlimit)
+            if changed:
+                self.setMeasureVoltageLimit()
+
+            changed, self.rear_terminals = imgui.checkbox("use rear terminals",self.rear_terminals)
+            if changed:
+                self.changeTerminals()
+
 
             imgui.end()
 
