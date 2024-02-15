@@ -73,7 +73,7 @@ class KeithleyGUI(QtWidgets.QWidget,):
         self.PID_voltage_target = QtWidgets.QLineEdit()
         self.PID_voltage_target.setValidator(double_validator)
         self.PID_voltage_target.setText("")
-        self.PID_voltage_target.setEnabled(False)
+        self.PID_voltage_target.setEnabled(True)
         PID_voltage_Form.addRow("PID target", self.PID_voltage_target)
         vbox.addLayout(PID_voltage_Form)
 
@@ -308,27 +308,26 @@ class KeithleyGUI(QtWidgets.QWidget,):
         P = float(self.pid_P_value.text())
         I = float(self.pid_I_value.text())
         D = float(self.pid_D_value.text())
-        print(P,I,D)
         self.pid.tunings = (P, I, D)
-        self.toggleOutput(Qt.CheckState.Checked) #start current
-        time.sleep(0.05) #wait 50 ms
+        #self.toggleOutput(Qt.CheckState.Checked) #start current
+
         if self.keithley:
             self.voltage = self.keithley.voltage*1000 #keithley talks in Volts, we want mV
         else:
             self.voltage = 0.05
         self.pid_start_current = float(self.setCurrentValue.text())
-        self.pid.setpoint = self.voltage
-        #self.pid.setpoint = float(self.PID_voltage_target.text())
-        self.PID_voltage_target.setText(str(self.pid.setpoint))
+        #self.pid.setpoint = self.voltage
+        self.pid.setpoint = float(self.PID_voltage_target.text())
+        #self.PID_voltage_target.setText(str(self.pid.setpoint))
         self.setCurrentValue.setEnabled(False) # I controll the current now
-        self.applyCurrentCB.setEnabled(False)
+        #self.applyCurrentCB.setEnabled(False)
         self.PID_timer.start()
 
     def stop_PID(self):
-        self.toggleOutput(Qt.CheckState.Unchecked) #start current
+        #self.toggleOutput(Qt.CheckState.Unchecked) #start current
         self.PID_timer.stop()
-        self.setCurrentValue.setEnabled(True) # I controll the current now
-        self.applyCurrentCB.setEnabled(True)
+        self.setCurrentValue.setEnabled(True) # I don't controll the current anymore
+        #self.applyCurrentCB.setEnabled(True)
 
     def run_PID(self):
         if self.keithley:
