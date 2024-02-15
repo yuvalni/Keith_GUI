@@ -38,7 +38,7 @@ class KeithleyGUI(QtWidgets.QWidget,):
         self.initKeithley()
         self.updateTimer = QTimer()
         self.updateTimer.timeout.connect(self.updateValues)
-        self.updateTimer.start(1000)
+        self.updateTimer.start(100�)
         #self.SES_API = SES_API(self.setCurrent,self.getCurrent)
         #self.API_thread = threading.Thread(target=self.SES_API.handle_connection,daemon=True)
         #self.API_thread.start()
