@@ -338,7 +338,7 @@ class KeithleyGUI(QtWidgets.QWidget,):
         self.VoltageValue.setText(str(self.voltage))
         output = self.pid(self.voltage)
 
-        assert self.pid_start_current + output < 80.0 #don't put too much current!!
+        #assert self.pid_start_current + output < 80.0 #don't put too much current!!
         self.current = self.pid_start_current + output
         if self.current < 80.0:
             self.setCurrent(self.current) #this function expects to get in milliamps
