@@ -49,7 +49,7 @@ class KeithleyGUI(QtWidgets.QWidget,):
         self.pid.output_limits = (-20, 20) #in mA
         self.PID_timer =QTimer()
         self.PID_timer.timeout.connect(self.run_PID)
-        self.PID_timer.setInterval(100) #update every 10 millisec
+        self.PID_timer.setInterval(100)
 
 
     def initLayout(self):
