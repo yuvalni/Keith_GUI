@@ -29,7 +29,7 @@ class KeithleyGUI(QtWidgets.QWidget,):
         self.current = 0.0
         self.voltage=0.0
         self.resistance = 0.0
-        self.nplc = 2
+        self.nplc = 0.1
         self.Vcomp = 2.0 #source compliance
         self.VMlimit = 1.0 #measure limit!
         self.Vrange = 1.0
@@ -129,7 +129,7 @@ class KeithleyGUI(QtWidgets.QWidget,):
         nplcRow.addWidget(QtWidgets.QLabel("nplc"))
         self.nplcValue = QtWidgets.QLineEdit()
         self.nplcValue.setValidator(double_validator)
-        self.nplcValue.setText("1.0")
+        self.nplcValue.setText("0.1")
         nplcRow.addWidget(self.nplcValue)
         SetNplcBtn = QtWidgets.QPushButton("Set nplc")
         SetNplcBtn.clicked.connect(lambda: self.SetVoltageNPLC(float(self.nplcValue.text())))
