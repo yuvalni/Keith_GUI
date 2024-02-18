@@ -46,7 +46,7 @@ class KeithleyGUI(QtWidgets.QWidget,):
 
         self.pid = PID(1.0, 0.0, 0.0, setpoint=0.0) # initial parameters
         self.pid.sample_time = 0.1  # Update every 0.1 seconds
-        self.pid.output_limits = (-20, 20) #in mA
+        self.pid.output_limits = (-100, 20) #in mA
         self.PID_timer =QTimer()
         self.PID_timer.timeout.connect(self.run_PID)
         self.PID_timer.setInterval(100)
@@ -340,7 +340,7 @@ class KeithleyGUI(QtWidgets.QWidget,):
 
         #assert self.pid_start_current + output < 80.0 #don't put too much current!!
         self.current = self.pid_start_current + output
-        if self.current < 80.0:
+        if abs(self.current) < 80.0:
             self.setCurrent(self.current) #this function expects to get in milliamps
             self.CurrentValue.setText(str(self.current)) #show the current
 
