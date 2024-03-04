@@ -72,7 +72,7 @@ class RandomProcedure(Procedure):
             log.debug("Emitting results: %s" % data)
             self.emit('progress', 100 * I / self.iterations)
             sleep(self.delay)
-            j=j+1		
+            j=j+1
             if self.should_stop():
                 log.warning("Caught the stop flag in the procedure")
                 break
