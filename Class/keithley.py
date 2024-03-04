@@ -160,7 +160,7 @@ class Keithley2600():
     def get_voltage(self):
         self.write("print(smua.measure.v())")
         sleep(0.001)
-        return self.read()
+        return float(self.read())
     
     def get_current(self):
         self.write("print(smua.measure.i())")

@@ -228,7 +228,7 @@ class KeithleyGUI(QtWidgets.QWidget,):
     def setSourceVoltageCompliance(self,V):
         self.Vcomp = V
         if self.keithley:
-            self.keithley.set_voltage_compliance(self.V_comp)
+            self.keithley.set_voltage_compliance(self.Vcomp)
         else:
             print("No keithley Vcomp = {}".format(V))
 
@@ -272,7 +272,7 @@ class KeithleyGUI(QtWidgets.QWidget,):
     def setCurrent(self,I):
         if self.keithley:
             assert I < 110
-            self.kiethly.set_current(I/1000) #I in mA, keithley recieve Amps
+            self.keithley.set_current(I/1000) #I in mA, keithley recieve Amps
             #self.keithley.source_current = I/1000 #I in mA, keithley recieve Amps
         else:
             print("no keithley. I={}mA".format(I))
@@ -297,8 +297,7 @@ class KeithleyGUI(QtWidgets.QWidget,):
 
         if self.keithley:
             #self.actualCurrent = self.keithley.current*1000 #kiethly talk in amps, we want mA
-
-            self.voltage = self.keithley.get_voltage()*1000 #keithley talks in Volts, we want mV
+            self.voltage = float(self.keithley.get_voltage())*1000 #keithley talks in Volts, we want mV
             if self.current > 0 :
                 self.resistance = self.voltage/self.current
             else:
