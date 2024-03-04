@@ -7,7 +7,8 @@ Created on Tue May  9 14:35:48 2023
 
 
 import logging
-from pymeasure.instruments.keithley import Keithley2400
+#from pymeasure.instruments.keithley import Keithley2400
+from Class.keithley import Keithley2600
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 import numpy as np
@@ -36,20 +37,22 @@ class RandomProcedure(Procedure):
 
     def startup(self):
         log.info("start keithley setup.")
-        self.keithley = Keithley2400("GPIB::16")
-        self.keithley.reset()
+        #self.keithley = Keithley2400("USB0::0x05E6::0x2614::4083836::INSTR")
+        self.keithley = Keithley2600()
+        self.keithley.connect()
+        
 
         # self.keithley.use_front_terminals()
-        self.keithley.use_rear_terminals()
+        #self.keithley.use_rear_terminals()
         #keithley.use_front_terminals()
         self.keithley.apply_current(0.05, self.comp_volt)
-        self.keithley.wires = 4  # set to 4 wires
+        #self.keithley.wires = 4  # set to 4 wires
         # self.keithley.compliance_voltage = V_comp
-        self.keithley.source_current = 0
-        self.keithley.auto_zero = False
+        #self.keithley.source_current = 0
+        #self.keithley.auto_zero = False
             # setting voltage read params
-        self.keithley.measure_voltage(2, 0.1, True)
-        self.keithley.write(":SYST:BEEP:STAT OFF")
+        self.keithley.measure_voltage(2, True)
+        #self.keithley.write(":SYST:BEEP:STAT OFF")
 
         log.info("keithley setup complete.")
 
@@ -72,7 +75,7 @@ class RandomProcedure(Procedure):
             log.debug("Emitting results: %s" % data)
             self.emit('progress', 100 * I / self.iterations)
             sleep(self.delay)
-            j=j+1
+            j=j+1		
             if self.should_stop():
                 log.warning("Caught the stop flag in the procedure")
                 break
@@ -83,10 +86,13 @@ class RandomProcedure(Procedure):
         I = np.linspace(self.start_current,self.end_current,self.iterations)
         j=0
         for _I in I:  #_I is in mA!
-           self.keithley.source_current = _I/1000 #Converting to keithley's Amps
+           self.keithley.set_current(_I/1000) #Converting to keithley's Amps
            self.keithley.enable_source()
-           V = self.keithley.voltage
-           data = {'I[mA]': _I,'V[mV]': V*1000}
+           sleep(self.delay)
+           V = self.keithley.get_voltage()
+           
+           data = {'I[mA]': _I,'V[mV]': float(V)*1000}
+           
            self.emit('results', data)
            log.debug("Emitting results: %s" % data)
            self.emit('progress', j/len(I)*100 )
@@ -113,7 +119,7 @@ class MainWindow(ManagedWindow):
         self.setWindowTitle('IV')
 
         self.filename = r'default_filename_delay{Delay Time:4f}s'   # Sets default filename
-        self.directory = r'C:\Users\Scienta Omicron\OneDrive - Technion\ARPES scripts\RT\data'            # Sets default directory
+        self.directory = r'C:\Users\eitan.lab\Desktop\Nitzav\IV_DATA'            # Sets default directory
         #self.store_measurement = False                              # Controls the 'Save data' toggle
         #self.file_input.extensions = ["csv", "txt", "data"]         # Sets recognized extensions, first entry is the default extension
         #self.file_input.filename_fixed = False                      # Controls whether the filename-field is frozen (but still displayed)
