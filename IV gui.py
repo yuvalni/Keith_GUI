@@ -81,7 +81,7 @@ class RandomProcedure(Procedure):
                 break
 
     def execute(self):
-        log.info("Starting the loop of %d iterations" % self.iterations)
+        log.info("Starting measurement.")
 
         I = np.linspace(self.start_current,self.end_current,self.iterations)
         j=0
@@ -119,7 +119,7 @@ class MainWindow(ManagedWindow):
         self.setWindowTitle('IV')
 
         self.filename = r'default_filename_delay{Delay Time:4f}s'   # Sets default filename
-        self.directory = r'C:\Users\eitan.lab\Desktop\Nitzav\IV_DATA'            # Sets default directory
+        self.directory = r'.\Data'            # Sets default directory
         #self.store_measurement = False                              # Controls the 'Save data' toggle
         #self.file_input.extensions = ["csv", "txt", "data"]         # Sets recognized extensions, first entry is the default extension
         #self.file_input.filename_fixed = False                      # Controls whether the filename-field is frozen (but still displayed)
