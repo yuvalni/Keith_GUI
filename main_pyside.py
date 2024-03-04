@@ -1,5 +1,6 @@
 
-from pymeasure.instruments.keithley import Keithley2400
+#from pymeasure.instruments.keithley import Keithley2400
+from Class.keithley import Keithley2600
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtCore import Qt,QTimer
 from SES_Interface import SES_API
@@ -19,8 +20,10 @@ class KeithleyGUI(QtWidgets.QWidget,):
         self.initLayout()
         self.keithley = None
         try:
-            self.keithley = Keithley2400("GPIB::16")
-            pass
+            #self.keithley = Keithley2400("GPIB::16")
+            self.keithley = Keithley2600()
+            self.keithley.connect()
+
         except:
             print("no keithley")
             self.keithley = None
@@ -198,46 +201,55 @@ class KeithleyGUI(QtWidgets.QWidget,):
 
     def initKeithley(self):
         if self.keithley:
-            self.keithley.reset()
+            #self.keithley.reset()
             # setting current params
             #self.keithley.use_front_terminals()
-            self.keithley.use_rear_terminals()
+
+            #self.keithley.use_rear_terminals()
             self.keithley.apply_current(None, self.Vcomp)
-            self.keithley.wires = 4  # set to 4 wires
+            #self.keithley.wires = 4  # set to 4 wires
+            self.keithley.set_4wires(True)
 
-            self.keithley.source_current = 0
-            self.keithley.auto_zero = True
+            #self.keithley.source_current = 0
+            self.keithley.set_current(0)
 
-            self.keithley.measure_voltage(self.nplc, self.VMlimit, True)
+            #self.keithley.auto_zero = True
+
+            self.keithley.measure_voltage(self.nplc , True)
 
             #just for fun:
             #self.keithley.beep(400, 0.5)
             #self.keithley.beep(600, 0.5)
-            self.keithley.triad(400,0.3)
-            self.keithley.write(":SYST:BEEP:STAT OFF")
+            #self.keithley.triad(400,0.3)
+            #self.keithley.write(":SYST:BEEP:STAT OFF")
+            self.keithley.disable_beep()
             print("Keithley ready.")
 
     def setSourceVoltageCompliance(self,V):
         self.Vcomp = V
         if self.keithley:
-            self.keithley.apply_current(self.current, self.Vcomp)
+            self.keithley.set_voltage_compliance(self.V_comp)
         else:
             print("No keithley Vcomp = {}".format(V))
 
     def SetVoltageNPLC(self,nplc):
         self.nplc = nplc
         if self.keithley:
-            self.keithley.voltage_nplc = self.nplc
+            self.keithley.set_nplc(self.nplc)
         else:
             print("No keithley nplc = {}".format(nplc))
 
     def SetVoltageRange(self,Vrange):
         self.Vrange = Vrange
         if self.keithley:
-            self.keithley.voltage_range = self.Vrange
+            #self.keithley.voltage_range = self.Vrange
+            print("need to implement this.")
         else:
             print("No keithley Vrange = {}".format(Vrange))
+
     def changeTerminals(self,state):
+        print("not implemented.")
+        return False
         if state == Qt.CheckState.Checked:
             self.rear_terminals = True
         else:
@@ -259,8 +271,9 @@ class KeithleyGUI(QtWidgets.QWidget,):
 
     def setCurrent(self,I):
         if self.keithley:
-            assert I < 90
-            self.keithley.source_current = I/1000 #I in mA, keithley recieve Amps
+            assert I < 110
+            self.kiethly.set_current(I/1000) #I in mA, keithley recieve Amps
+            #self.keithley.source_current = I/1000 #I in mA, keithley recieve Amps
         else:
             print("no keithley. I={}mA".format(I))
         self.current = I
@@ -285,7 +298,7 @@ class KeithleyGUI(QtWidgets.QWidget,):
         if self.keithley:
             #self.actualCurrent = self.keithley.current*1000 #kiethly talk in amps, we want mA
 
-            self.voltage = self.keithley.voltage*1000 #keithley talks in Volts, we want mV
+            self.voltage = self.keithley.get_voltage()*1000 #keithley talks in Volts, we want mV
             if self.current > 0 :
                 self.resistance = self.voltage/self.current
             else:
@@ -312,7 +325,7 @@ class KeithleyGUI(QtWidgets.QWidget,):
         #self.toggleOutput(Qt.CheckState.Checked) #start current
 
         if self.keithley:
-            self.voltage = self.keithley.voltage*1000 #keithley talks in Volts, we want mV
+            self.voltage = self.keithley.get_voltage()*1000 #keithley talks in Volts, we want mV
         else:
             self.voltage = 0.05
         self.pid_start_current = float(self.setCurrentValue.text())
@@ -331,7 +344,7 @@ class KeithleyGUI(QtWidgets.QWidget,):
 
     def run_PID(self):
         if self.keithley:
-            self.voltage = self.keithley.voltage*1000 #keithley talks in Volts, we want mV
+            self.voltage = self.keithley.get_voltage()*1000 #keithley talks in Volts, we want mV
         else:
             self.voltage = self.pid.setpoint*random()
 
