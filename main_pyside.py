@@ -8,6 +8,7 @@ import time
 import sys
 from simple_pid import PID
 from random import random
+from pymeasure.adapters import VISAAdapter
 #:VOLTage:PROTection:TRIPped? (for source)
 
 
@@ -16,11 +17,15 @@ class KeithleyGUI(QtWidgets.QWidget,):
 
     def __init__(self,*args, **kwargs):
         super(KeithleyGUI, self).__init__(*args, **kwargs)
+        self.threadpool = QtCore.QThreadPool()
         self.initLayout()
+
         self.keithley = None
         try:
             self.keithley = Keithley2400("GPIB::16")
-            pass
+            #adapter = VISAAdapter("ASRL13::INSTR")
+            #self.keithley = Keithley2400(adapter)
+
         except:
             print("no keithley")
             self.keithley = None
@@ -194,6 +199,27 @@ class KeithleyGUI(QtWidgets.QWidget,):
         measureGroupVbox.addLayout(measure_form)
         Col2.addWidget(measureGroup)
 
+        self.LED = QtWidgets.QCheckBox()
+        self.LED.setTristate(True)
+        self.LED.setEnabled(False)
+        self.LED.setCheckState(Qt.CheckState.Unchecked)
+
+        self.LED.setText("SES Not connected")
+        self.LED.setStyleSheet(u"QCheckBox::indicator {\n"
+                                                                        "    width:                  20px;\n"
+                                                                        "    height:                 20px;\n"
+                                                                        "    border-radius:          5px;\n"
+                                                                        "}\n"
+                                                                        "\n"
+                                                                        "QCheckBox::indicator:checked {\n"
+                                                                        "    background-color:       rgb(85, 255, 0);\n"
+                                                                        "    border:                 2px solid black;\n"
+                                                                        "}\n"
+                                                                        "\n"
+                                                                        "QCheckBox::indicator:unchecked {\n"
+                                                                        "    background-color:       rgb(255, 0, 0);\n"
+                                                                        "    border:                 2px solid black;\n"
+                                                                        "}")
         self.setLayout(layout)
 
     def initKeithley(self):
@@ -344,12 +370,47 @@ class KeithleyGUI(QtWidgets.QWidget,):
             self.setCurrent(self.current) #this function expects to get in milliamps
             self.CurrentValue.setText(str(self.current)) #show the current
 
+    def SES_set_current(self,I):
+        self.LED.setText("current: "+str(I))
+        if np.abs(I)<100: #assuming mA
+            self.setCurrent(I)
+        else:
+            return False
 
+    def SES_get_current(self):
+        self.LED.setText("current?")
+        return self.getCurrent()
+
+    def ChangeConnectionLED(self,state):
+        if state == SES_API.ConnectionStatus.Listening:
+            self.LED.setCheckState(Qt.CheckState.PartiallyChecked)
+            self.LED.setText("Listening")
+        if state == SES_API.ConnectionStatus.Connected:
+            print("green")
+            self.LED.setText("Connected")
+            self.LED.setCheckState(Qt.CheckState.Checked)
+        if state == SES_API.ConnectionStatus.Error:
+            self.LED.setText("Not Connected")
+            self.LED.setCheckState(Qt.CheckState.Unchecked)
+
+
+
+    def closeWindowCallback(selfs,SESapi):
+        SESapi.closeLoop()
 
 
 
 if __name__ == "__main__":
+
     app = QtWidgets.QApplication(sys.argv)
     GUI = KeithleyGUI()
     GUI.show()
+
+    SESapi = SES_API(GUI.SES_set_current,GUI.SES_get_current)
+    SESapi.ConnectionStatusChanged.connect(lambda state: GUI.ChangeConnectionLED(state))
+
+    GUI.threadpool.start(SESapi.handle_connection)
+
+
+    app.aboutToQuit.connect(lambda: GUI.closeWindowCallback(SESapi))
     app.exec()

@@ -1,12 +1,24 @@
+from enum import Enum
 import socket
 from select import select
 from time import sleep
+from PySide6.QtCore import Signal,QObject,Slot
+
+class SES_API(QObject):
+    class ConnectionStatus(Enum):
+        Error = 0
+        Listening = 1
+        Connected = 2
+
+    Stop = Signal()
+    ConnectionStatusChanged = Signal(object)
 
 
-class SES_API:
     def __init__(self,setCurrent,getCurrent):
+        super(SES_API, self).__init__()
         self.HOST = "127.0.0.1"
         self.PORT = 5012  # Port to listen on (non-privileged ports are > 1023)
+        self.run = True
         self.conn = None
         self.listening = False
         self.connected = False
@@ -22,22 +34,24 @@ class SES_API:
     def set_Curr(self,data):
         self.setCurrent(float(data.replace("Curr","")))
 
-    def stop():
+    def stop(self):
         self.setCurrent(0.0)
+
 
     def handle_connection(self):#this is main loop.
         #GUI: not connected
+        self.ConnectionStatusChanged.emit(self.ConnectionStatus.Error)
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.setblocking(True)
             s.settimeout(0.01)
             s.bind((self.HOST, self.PORT))
             s.listen()
 
-            while True:
+            while self.run:
                 print("listening")
                 self.listening = True
-                #gui: listening ...yellow
-                #eel.set_socket_value(1)
+                self.ConnectionStatusChanged.emit(self.ConnectionStatus.Listening)
+
                 read,write,_ = select([s],[s],[],0.01)
                 while(not read):
                     #waiting for connection without blocking
@@ -48,12 +62,12 @@ class SES_API:
                 self.conn, addr = s.accept()
                 self.conn.settimeout(0.1)
                 with self.conn:
-                    #GUI: Connected! green!
+                    self.ConnectionStatusChanged.emit(self.ConnectionStatus.Connected)
                     self.listening = False
                     self.connected = True
                     print("Connected by {}".format(addr))
 
-                    while self.connected:
+                    while self.connected and self.run:
                         #we are stuck here!
                         try:
                             data = self.conn.recv(512)
@@ -70,8 +84,8 @@ class SES_API:
                         for data in data.decode("UTF-8").split('\n'):
                             if("?" in data):
                                 self.get_Curr() #Handle data request
-                            elif "Curr" in data: #MOVX5.0 for example
-                                self.set_Curr(data) #handle move request
+                            elif "Curr" in data: #Curr0.1 for example
+                                self.set_Curr(data) #handle set curr request
                             elif "STOP" in data:
                                 self.stop()
                             else:
@@ -88,3 +102,8 @@ class SES_API:
 
 
                 sleep(0.1)
+                
+    @Slot()
+    def closeLoop(self):
+        print("closing SES loop.")
+        self.run = False
