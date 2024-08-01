@@ -72,7 +72,7 @@ class RandomProcedure(Procedure):
             log.debug("Emitting results: %s" % data)
             self.emit('progress', 100 * I / self.iterations)
             sleep(self.delay)
-            j=j+1		
+            j=j+1
             if self.should_stop():
                 log.warning("Caught the stop flag in the procedure")
                 break
@@ -113,7 +113,7 @@ class MainWindow(ManagedWindow):
         self.setWindowTitle('IV')
 
         self.filename = r'default_filename_delay{Delay Time:4f}s'   # Sets default filename
-        self.directory = r'C:\Users\Scienta Omicron\OneDrive - Technion\ARPES scripts\RT\data'            # Sets default directory
+        self.directory = r'.\Data'            # Sets default directory
         #self.store_measurement = False                              # Controls the 'Save data' toggle
         #self.file_input.extensions = ["csv", "txt", "data"]         # Sets recognized extensions, first entry is the default extension
         #self.file_input.filename_fixed = False                      # Controls whether the filename-field is frozen (but still displayed)
