@@ -28,10 +28,14 @@ class SES_API(QObject):
 
     def get_Curr(self):
         #Not to be confused with getCurrent (confusing? YES!)
+        print("Get me curr!")
+        print(self.getCurrent())
         self.conn.send("{}\n".format(self.getCurrent()).encode())
 
 
     def set_Curr(self,data):
+        print("SetCurr")
+        print(float(data.replace("Curr","")))
         self.setCurrent(float(data.replace("Curr","")))
 
     def stop(self):
@@ -82,6 +86,7 @@ class SES_API(QObject):
                             continue
 
                         for data in data.decode("UTF-8").split('\n'):
+                            print(data)
                             if("?" in data):
                                 self.get_Curr() #Handle data request
                             elif "Curr" in data: #Curr0.1 for example

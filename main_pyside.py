@@ -3,6 +3,7 @@ from pymeasure.instruments.keithley import Keithley2400
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtCore import Qt,QTimer
 from SES_Interface import SES_API
+import numpy as np
 import threading
 import time
 import sys
@@ -220,6 +221,7 @@ class KeithleyGUI(QtWidgets.QWidget,):
                                                                         "    background-color:       rgb(255, 0, 0);\n"
                                                                         "    border:                 2px solid black;\n"
                                                                         "}")
+        Col2.addWidget(self.LED)
         self.setLayout(layout)
 
     def initKeithley(self):
@@ -372,9 +374,11 @@ class KeithleyGUI(QtWidgets.QWidget,):
 
     def SES_set_current(self,I):
         self.LED.setText("current: "+str(I))
+        print(I)
         if np.abs(I)<100: #assuming mA
             self.setCurrent(I)
         else:
+            print("Current too high.")
             return False
 
     def SES_get_current(self):
