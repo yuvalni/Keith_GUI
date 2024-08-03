@@ -11,7 +11,7 @@ from simple_pid import PID
 from random import random
 from pymeasure.adapters import VISAAdapter
 #:VOLTage:PROTection:TRIPped? (for source)
-
+from PlotWindow.PlotWindow import PlotWindow
 
 
 class KeithleyGUI(QtWidgets.QWidget,):
@@ -221,7 +221,17 @@ class KeithleyGUI(QtWidgets.QWidget,):
                                                                         "    background-color:       rgb(255, 0, 0);\n"
                                                                         "    border:                 2px solid black;\n"
                                                                         "}")
-        Col2.addWidget(self.LED)
+        
+        BottomRow = QtWidgets.QHBoxLayout()
+        BottomRow.addWidget(self.LED)
+
+        self.PlotBtn = QtWidgets.QPushButton("Plot")
+        self.PlotBtn.clicked.connect(self.show_Plot_Window)
+        BottomRow.addWidget(self.PlotBtn)
+        Col2.addLayout(BottomRow)
+
+
+        
         self.setLayout(layout)
 
     def initKeithley(self):
@@ -319,7 +329,7 @@ class KeithleyGUI(QtWidgets.QWidget,):
             else:
                 self.resistance = 0.0
         else:
-            self.actualCurrent = 999
+            self.voltage = 5*self.current + random()
 
         self.CurrentValue.setText(str(self.current))
         self.VoltageValue.setText(str(self.voltage))
@@ -398,7 +408,10 @@ class KeithleyGUI(QtWidgets.QWidget,):
             self.LED.setCheckState(Qt.CheckState.Unchecked)
 
 
-
+    def show_Plot_Window(self):
+        self.Plot_window = PlotWindow(self)
+        self.Plot_window.show()
+    
     def closeWindowCallback(selfs,SESapi):
         SESapi.closeLoop()
 
